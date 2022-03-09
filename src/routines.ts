@@ -23,21 +23,23 @@ function matchAll(string: string, regex: RegExp): Array<Match> {
 		index: x.index!,
 		length: x[0].length,
 		end: x.index! + x[0].length,
-		groups: x.groups
+		groups: {...[...x], ...x.groups}
 	} : undefined).filter(Boolean) as Array<Match>;
 }
 
 function formatStringWithTokens(string: string, tokens?: string[]) {
-	if (tokens && tokens.length) {
-		const matches = matchAll(string, /\{([0-9]+)\}/g);
-		
-		for (const match of matches) {
-			string = [
-				string.slice(0, match.index),
-				tokens[match.match],
-				string.slice(match.end)
-			].join("");
-		}
+	if (tokens) {
+		let match: Match | undefined;
+		do{
+			match = matchAll(string, /\{([0-9]+)\}/g)[0];
+			if(match){
+				string = [
+					string.slice(0, match.index),
+					tokens[match.groups[1]],
+					string.slice(match.end)
+				].join("");
+			}
+		}while(match);
 	}
 
 	return string;
