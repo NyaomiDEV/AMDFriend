@@ -1,7 +1,8 @@
 {
-  "name": "amd-extravaganza",
+  "name": "amdfriend",
   "version": "1.0.0",
   "main": "dist/cli.js",
+  "bin": "dist/cli.js",
   "license": "MPL-2.0",
   "private": true,
   "author": {
