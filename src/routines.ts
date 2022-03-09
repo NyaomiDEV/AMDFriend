@@ -1,4 +1,4 @@
-export function replaceAll(string: string, find: RegExp, replace: string): string {
+export function replaceAll(string: string, find: RegExp, replace: string): [string, number] {
 	let matchCount = 0;
 
 	let match: RegExpExecArray | null;
@@ -13,7 +13,7 @@ export function replaceAll(string: string, find: RegExp, replace: string): strin
 	}
 
 	console.log(`Found ${matchCount} matches`);
-	return string;
+	return [string, matchCount];
 }
 
 function formatStringWithTokens(string: string, tokens?: string[]): string {

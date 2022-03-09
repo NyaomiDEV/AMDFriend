@@ -24,6 +24,7 @@ const argv = yargs(hideBin(process.argv)).argv as {
 		const originalFilePath = resolve(path.toString());
 		console.log(`Analyzing and patching file: ${originalFilePath}`);
 		const patchedFilePath = await patchFile(originalFilePath, argv["dry-run"]);
-		console.log(`Patched file is in: ${patchedFilePath}`);
+		if(patchedFilePath)
+			console.log(`Patched file is in: ${patchedFilePath}`);
 	}
 })();

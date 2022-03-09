@@ -5,34 +5,44 @@ import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
 
-export async function patchFile(filePath: string, dryRun: boolean): Promise<string> {
+export async function patchFile(filePath: string, dryRun: boolean): Promise<string|null> {
 	const patchedFilePath = resolve(dirname(filePath), basename(filePath, extname(filePath)) + ".patched" + extname(filePath));
 
-	let buffer = await readFile(filePath, "binary");
+
+	let buffer = Object(await readFile(filePath, "binary"));
+	let matchCount = 0;
+	let patchOccurred = false;
+
 
 	console.log("Searching and replacing for instruction __mkl_intel_serving_cpu_true...");
-	buffer = replaceAll(
+	[buffer, matchCount] = replaceAll(
 		buffer,
 		regexes.__mkl_serv_intel_cpu_true.find,
 		regexes.__mkl_serv_intel_cpu_true.replace
 	);
+	if(matchCount) patchOccurred = true;
 
 	console.log("Searching and replacing for instructions __intel_fast_memset.A and __intel_fast_memcpy.A...");
-	buffer = replaceAll(
+	[buffer, matchCount] = replaceAll(
 		buffer,
 		regexes.__intel_fast_memset_or_memcpy_A.find,
 		regexes.__intel_fast_memset_or_memcpy_A.replace
 	);
+	if(patchOccurred || matchCount) patchOccurred = true;
 
-	console.log("Writing resulting file...");
-	if(!dryRun)
-		await writeFile(patchedFilePath, buffer, "binary");
+	if(patchOccurred){
+		console.log("Writing resulting file...");
+		if (!dryRun)
+			await writeFile(patchedFilePath, buffer, "binary");
 
-	console.log("Invoking command:", `xattr -cr "${patchedFilePath}"`);
-	if(!dryRun)
-		await promisify(exec)(`xattr -cr "${patchedFilePath}"`);
+		console.log("Invoking command:", `xattr -cr "${patchedFilePath}"`);
+		if (!dryRun)
+			await promisify(exec)(`xattr -cr "${patchedFilePath}"`);
 
-	return patchedFilePath;
+		return patchedFilePath;
+	}
+
+	return null;
 }
 
 export async function signFile(filePath: string, dryRun: boolean){
