@@ -14,7 +14,7 @@ export async function patchFile(filePath: string, dryRun: boolean): Promise<stri
 	let patchOccurred = false;
 
 
-	console.log("Searching and replacing for instruction __mkl_intel_serving_cpu_true...");
+	console.log("Searching and replacing for instruction __mkl_serv_intel_cpu_true...");
 	[buffer, matchCount] = replaceAll(
 		buffer,
 		regexes.__mkl_serv_intel_cpu_true.find,
