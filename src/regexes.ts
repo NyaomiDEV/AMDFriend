@@ -1,4 +1,11 @@
 /* eslint-disable no-control-regex */
+/**
+ * Important!
+ * All regexes and replaces MUST be of equal resulting length
+ * AKA: If you match 10 bytes, you MUST replace 10 bytes.
+ * 
+ * If this is too restrictive, we can change it, but it will take more effort
+ */
 export default {
 	__mkl_serv_intel_cpu_true: {
 		find: /\x53\x48\x83\xEC\x20\x8B\x35[\s\S]{4}/sg,
