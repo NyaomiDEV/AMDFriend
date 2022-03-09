@@ -5,7 +5,7 @@ import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
 
-export async function patchFile(filePath: string): Promise<string> {
+export async function patchFile(filePath: string, dryRun: boolean): Promise<string> {
 	const patchedFilePath = resolve(dirname(filePath), basename(filePath, extname(filePath)) + ".patched" + extname(filePath));
 
 	let buffer = await readFile(filePath, "binary");
@@ -25,15 +25,18 @@ export async function patchFile(filePath: string): Promise<string> {
 	);
 
 	console.log("Writing resulting file...");
-	await writeFile(patchedFilePath, buffer, "binary");
+	if(!dryRun)
+		await writeFile(patchedFilePath, buffer, "binary");
 
 	console.log("Invoking command:", `xattr -cr "${patchedFilePath}"`);
-	await promisify(exec)(`xattr -cr "${patchedFilePath}"`);
+	if(!dryRun)
+		await promisify(exec)(`xattr -cr "${patchedFilePath}"`);
 
 	return patchedFilePath;
 }
 
-export async function signFile(filePath: string){
+export async function signFile(filePath: string, dryRun: boolean){
 	console.log("Invoking command:", `codesign --force --deep --sign - "${filePath}"`);
-	await promisify(exec)(`codesign --force --deep --sign - "${filePath}"`);
+	if(!dryRun)
+		await promisify(exec)(`codesign --force --deep --sign - "${filePath}"`);
 }
