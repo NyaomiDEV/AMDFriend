@@ -5,9 +5,10 @@ import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
 
-export async function patchFile(filePath: string, dryRun: boolean): Promise<string|null> {
-	const patchedFilePath = resolve(dirname(filePath), basename(filePath, extname(filePath)) + ".patched" + extname(filePath));
-
+export async function patchFile(filePath: string, dryRun: boolean, inPlace: boolean): Promise<string|null> {
+	let patchedFilePath = resolve(dirname(filePath), basename(filePath, extname(filePath)) + ".patched" + extname(filePath));
+	if(inPlace)
+		patchedFilePath = filePath;
 
 	let buffer = Object(await readFile(filePath, "binary"));
 	let matchCount = 0;
