@@ -4,7 +4,7 @@ Note: All of this is experimental software and it should only be referred to for
 
 ## Introduction
 
-This project stems directly from the excellent guide made by tomnic over at the MacOS86 forums.
+This project stems directly from the excellent [guide](https://www.macos86.it/topic/5489-tutorial-for-patching-binaries-for-amd-hackintosh-compatibility/) made by tomnic over at the MacOS86 forums.
 
 Since userland patching is not possible with Lilu on Big Sur+, manual patching of libraries of certain programs is needed to get them to work reliably on AMD hackintoshes.
 
