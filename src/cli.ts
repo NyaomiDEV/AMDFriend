@@ -11,7 +11,6 @@ const argv = yargs(hideBin(process.argv)).argv as {
 };
 
 (async () => {
-	console.log(argv);
 	if(!argv._[0]){
 		console.error("You must specify at least a path to a library as argument!");
 		process.exit(1);
