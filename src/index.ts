@@ -35,9 +35,10 @@ export async function patchFile(filePath: string, dryRun: boolean): Promise<stri
 		if (!dryRun)
 			await writeFile(patchedFilePath, buffer, "binary");
 
-		console.log("Invoking command:", `xattr -cr "${patchedFilePath}"`);
+		const xattrCmd = `xattr -cr "${patchedFilePath}"`;
+		console.log("Invoking command:", xattrCmd);
 		if (!dryRun)
-			await promisify(exec)(`xattr -cr "${patchedFilePath}"`);
+			await promisify(exec)(xattrCmd);
 
 		return patchedFilePath;
 	}
@@ -46,7 +47,8 @@ export async function patchFile(filePath: string, dryRun: boolean): Promise<stri
 }
 
 export async function signFile(filePath: string, dryRun: boolean){
-	console.log("Invoking command:", `codesign --force --deep --sign - "${filePath}"`);
+	const signCmd = `codesign --force --deep --sign - "${filePath}"`;
+	console.log("Invoking command:", signCmd);
 	if(!dryRun)
-		await promisify(exec)(`codesign --force --deep --sign - "${filePath}"`);
+		await promisify(exec)(signCmd);
 }

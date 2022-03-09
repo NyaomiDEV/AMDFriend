@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { resolve } from "path";
-import { patchFile } from ".";
+import { patchFile, signFile } from ".";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -24,7 +24,10 @@ const argv = yargs(hideBin(process.argv)).argv as {
 		const originalFilePath = resolve(path.toString());
 		console.log(`Analyzing and patching file: ${originalFilePath}`);
 		const patchedFilePath = await patchFile(originalFilePath, argv["dry-run"]);
-		if(patchedFilePath)
+		if(patchedFilePath){
 			console.log(`Patched file is in: ${patchedFilePath}`);
+			if(argv.sign)
+				await signFile(patchedFilePath, argv["dry-run"]);
+		}
 	}
 })();
