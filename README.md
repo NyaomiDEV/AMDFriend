@@ -22,13 +22,39 @@ You will need:
 - Node.js
 - Yarn
 
+```
+$ yarn global add NyaomiDEV/AMDFriend
+```
+
+Use it with
+
+```
+$ amdfriend "/path/to/your/library.dylib"
+```
+
 (Yes I should rewrite this project in Python or Perl or something more 'affordable' once it works reliably)
+
+## Contributing
+
+If you want to contribute to this project, clone it to your computer!
 
 ```sh
 $ git clone https://github.com/NyaomiDEV/AMDFriend
 $ cd AMDFriend
 $ yarn
-$ yarn build && yarn start "/path/to/your/library.dylib"
+$ yarn test "/path/to/your/library.dylib"
+```
+
+## Tips and tricks
+
+Scan for patchable files:
+```
+$ find . -type f -exec amdfriend --dry-run --in-place -- "{}" \; | grep "Patched"
+```
+
+Scan for patchable files and patch them (NOT recommended):
+```
+$ find . -type f -exec amdfriend --in-place --sign -- "{}" \; | grep "Patched"
 ```
 
 ## License
