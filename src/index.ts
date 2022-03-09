@@ -33,7 +33,7 @@ export async function patchFile(filePath: string): Promise<string> {
 	return patchedFilePath;
 }
 
-export async function signFile(filePath){
+export async function signFile(filePath: string){
 	console.log("Invoking command:", `codesign --force --deep --sign - "${filePath}"`);
 	await promisify(exec)(`codesign --force --deep --sign - "${filePath}"`);
 }
