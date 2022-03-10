@@ -41,7 +41,7 @@ const argv = yargs(hideBin(process.argv))
 		default: false
 	})
 	.option("directories", {
-		alias: "d",
+		alias: "D",
 		describe: "Scan directories alongside files. It will search for any file with no extension and with extension `.dylib`, as they are the common ones to patch.",
 		demandOption: false,
 		type: "array",
