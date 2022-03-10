@@ -16,7 +16,7 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 
 
 	console.log("Searching and replacing for instruction __mkl_serv_intel_cpu_true...");
-	[buffer, matchCount] = replaceAll(
+	matchCount = replaceAll(
 		buffer,
 		regexes.__mkl_serv_intel_cpu_true.find,
 		regexes.__mkl_serv_intel_cpu_true.replace
@@ -24,7 +24,7 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 	if(matchCount) patchOccurred = true;
 
 	console.log("Searching and replacing for instructions __intel_fast_memset.A and __intel_fast_memcpy.A...");
-	[buffer, matchCount] = replaceAll(
+	matchCount = replaceAll(
 		buffer,
 		regexes.__intel_fast_memset_or_memcpy_A.find,
 		regexes.__intel_fast_memset_or_memcpy_A.replace

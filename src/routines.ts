@@ -1,22 +1,24 @@
-export function replaceAll(buffer: Buffer, find: RegExp, replace: string): [Buffer, number] {
+export function replaceAll(buffer: Buffer, find: RegExp, replace: string): number {
 	let matchCount = 0;
 
 	const chunkSize = 128 * 1024 * 1024; // 128MiB in bytes
-	let chunkQueued: Buffer | undefined;
+	const chunkQueued: { buffer?: Buffer, offset: number } = {
+		buffer: undefined,
+		offset: 0
+	};
 	let currentOffset = 0;
-	let output = Buffer.alloc(0);
 
 	while (currentOffset < buffer.length) {
 		let chunk = buffer.slice(currentOffset, currentOffset + chunkSize);
 		let chunkString;
-		if(chunkQueued)
-			chunkString = chunkQueued.toString("binary") + chunk.toString("binary");
+		if(chunkQueued.buffer)
+			chunkString = chunkQueued.buffer.toString("binary") + chunk.toString("binary");
 		else
 			chunkString = chunk.toString("binary");
 
 		let match: RegExpExecArray | null;
 		while ((match = find.exec(chunkString)) !== null) {
-			const index = currentOffset + (match.index - (chunkQueued ? chunkQueued.length : 0));
+			const index = currentOffset + (match.index - (chunkQueued.buffer ? chunkQueued.buffer.length : 0));
 			console.log(`Processing match <${Buffer.from(match[0], "binary").toString("hex").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${index} (Hex: ${index.toString(16)})`);
 			chunkString = [
 				chunkString.slice(0, match.index),
@@ -26,18 +28,32 @@ export function replaceAll(buffer: Buffer, find: RegExp, replace: string): [Buff
 			matchCount++;
 		}
 
-		output = Buffer.concat([output, Buffer.from(chunkString.slice(0, chunkSize), "binary")]);
-		chunk = Buffer.from(chunkString.slice(chunkSize), "binary");
+		if(chunkQueued.buffer){
+			writeWithTail(buffer, chunkQueued.buffer, chunkQueued.offset);
+			chunk = Buffer.from(chunkString.slice(chunkQueued.buffer.length), "binary");
+		}else
+			chunk = Buffer.from(chunkString, "binary");
 
-		if(chunk.length)
-			chunkQueued = chunk;
+		if(chunk.length){
+			chunkQueued.buffer = chunk;
+			chunkQueued.offset = currentOffset;
+		}
 
-		currentOffset += chunkSize;
+		if (chunkQueued.buffer)
+			currentOffset += chunkQueued.buffer.length;
 	}
-	output = Buffer.concat([output, chunkQueued || Buffer.alloc(0)]);
+
+	if(chunkQueued.buffer)
+		writeWithTail(buffer, chunkQueued.buffer, chunkQueued.offset);
 
 	console.log(`Found ${matchCount} matches`);
-	return [output, matchCount];
+	return matchCount;
+}
+
+function writeWithTail(buffer: Buffer, otherBuffer: Buffer, offset: number){
+	const bytesWritten = buffer.write(otherBuffer.toString("binary"), offset, otherBuffer.length, "binary");
+	if(bytesWritten !== otherBuffer.length)
+		buffer = Buffer.concat([buffer, otherBuffer.slice(bytesWritten)]);
 }
 
 function formatStringWithTokens(string: string, tokens?: string[]): string {
