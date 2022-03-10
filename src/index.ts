@@ -10,7 +10,7 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 	if(inPlace)
 		patchedFilePath = filePath;
 
-	let buffer = Object(await readFile(filePath, "binary"));
+	let buffer = await readFile(filePath, "binary");
 	let matchCount = 0;
 	let patchOccurred = false;
 
