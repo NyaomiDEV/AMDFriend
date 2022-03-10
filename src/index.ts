@@ -10,7 +10,7 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 	if(inPlace)
 		patchedFilePath = filePath;
 
-	let buffer = await readFile(filePath, "binary");
+	let buffer = await readFile(filePath);
 	let matchCount = 0;
 	let patchOccurred = false;
 
@@ -34,7 +34,7 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 	if(patchOccurred){
 		console.log("Writing resulting file...");
 		if (!dryRun)
-			await writeFile(patchedFilePath, buffer, "binary");
+			await writeFile(patchedFilePath, buffer);
 
 		const xattrCmd = `xattr -cr "${patchedFilePath}"`;
 		console.log("Invoking command:", xattrCmd);
