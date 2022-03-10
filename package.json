@@ -1,19 +1,24 @@
 {
   "name": "amdfriend",
   "version": "1.0.0",
-  "main": "dist/cli.js",
+  "main": "dist/index.js",
   "bin": "dist/cli.js",
   "license": "MPL-2.0",
   "private": true,
   "author": {
     "name": "Naomi Calabretta"
   },
+  "files": [
+    "dist/**",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "lint": "eslint src/ --ext .ts",
     "build": "tsc",
     "clean": "rm -rf dist",
     "test": "yarn build && yarn start",
-    "start": "node ."
+    "start": "node dist/cli.js"
   },
   "devDependencies": {
     "@types/node": "^14.14.22",
