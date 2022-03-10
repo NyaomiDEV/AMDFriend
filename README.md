@@ -19,20 +19,26 @@ Tomnic did outline some general bit patterns to search for, but then he admitted
 Only use this if you know what you're doing. Also, this is incomplete software.
 
 You will need:
-- Node.js
-- Yarn
+- Node.js: `brew install nodejs`
+- Yarn: `brew install yarn`
 
+Install (and update) AMDFriend on your system with this command:
 ```
 $ yarn global add NyaomiDEV/AMDFriend
 ```
 
-Use it with
-
+Use it with:
 ```
 $ amdfriend "/path/to/your/library.dylib"
 ```
 
-(Yes I should rewrite this project in Python or Perl or something more 'affordable' once it works reliably)
+## Command line arguments
+
+|Argument|Type|Default value|Description|
+|-|-|-|-|
+|`--in-place`|Boolean|`false`|Directly patch the library, as opposed to creating a patched library with `.patched` appended to the file name.|
+|`--sign`|Boolean|`false`|Automatically invoke `codesign` on patched libraries.|
+|`--dry-run`|Boolean|`false`|Do all checking and patching, but DO NOT write anything to disk. This is useful to test performance and to scan for matches in a given library.|
 
 ## Contributing
 
