@@ -62,7 +62,7 @@ $ amdfriend --dry-run --directories /path/to/dir /path/to/another/dir | grep "Ro
 
 Scan for patchable files and patch them (NOT recommended):
 ```
-$ amdfriend --in-place --backup --directories /path/to/dir /path/to/another/dir
+$ amdfriend --in-place --backup --sign --directories /path/to/dir /path/to/another/dir
 ```
 
 ## License
