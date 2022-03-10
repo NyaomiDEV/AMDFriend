@@ -4,11 +4,15 @@ import { patchFile, signFile } from ".";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-const argv = yargs(hideBin(process.argv)).argv as {
-	$0: string,
-	_: (string|number)[],
-	[x: string]: any
-};
+const argv = yargs(hideBin(process.argv))
+	.boolean("in-place")
+	.boolean("dry-run")
+	.boolean("sign")
+	.argv as {
+		$0: string,
+		_: (string|number)[],
+		[x: string]: any
+	};
 
 (async () => {
 	if(!argv._[0]){
