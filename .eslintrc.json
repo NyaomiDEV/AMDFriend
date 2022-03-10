@@ -82,6 +82,7 @@
 			"error",
 			"multi-or-nest"
 		],
-		"no-case-declarations": "off"
+		"no-case-declarations": "off",
+		"no-control-regex": "off"
 	}
 }

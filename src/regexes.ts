@@ -1,4 +1,3 @@
-/* eslint-disable no-control-regex */
 export default {
 	__mkl_serv_intel_cpu_true: {
 		find: /\x53\x48\x83\xEC\x20\x8B\x35[\s\S]{4}/sg,
