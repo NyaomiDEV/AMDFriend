@@ -37,6 +37,7 @@ $ amdfriend "/path/to/your/library.dylib"
 |Argument|Type|Default value|Description|
 |-|-|-|-|
 |`--in-place`|Boolean|`false`|Directly patch the library, as opposed to creating a patched library with `.patched` appended to the file name.|
+|`--backup`|Boolean|`false`|Only works in conjunction with `--in-place`, backs up the original library by copying it and appending `.bak` on its extension.|
 |`--sign`|Boolean|`false`|Automatically invoke `codesign` on patched libraries.|
 |`--dry-run`|Boolean|`false`|Do all checking and patching, but DO NOT write anything to disk. This is useful to test performance and to scan for matches in a given library.|
 

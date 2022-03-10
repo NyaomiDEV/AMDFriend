@@ -1,5 +1,7 @@
-export function replaceAll(buffer: Buffer, find: RegExp, replace: string): number {
-	let matchCount = 0;
+import { Routine } from "./types";
+
+export function replaceAll(buffer: Buffer, find: RegExp, replace: string): Routine[] {
+	const result: Routine[] = [];
 
 	const chunkSize = 128 * 1024 * 1024; // 128MiB in bytes
 	const chunkQueued: { buffer?: Buffer, offset: number } = {
@@ -18,14 +20,15 @@ export function replaceAll(buffer: Buffer, find: RegExp, replace: string): numbe
 
 		let match: RegExpExecArray | null;
 		while ((match = find.exec(chunkString)) !== null) {
-			const index = currentOffset + (match.index - (chunkQueued.buffer ? chunkQueued.buffer.length : 0));
-			console.log(`Processing match <${Buffer.from(match[0], "binary").toString("hex").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${index} (Hex: ${index.toString(16)})`);
+			result.push({
+				bytes: Buffer.from(match[0], "binary"),
+				offset: currentOffset + (match.index - (chunkQueued.buffer ? chunkQueued.buffer.length : 0))
+			});
 			chunkString = [
 				chunkString.slice(0, match.index),
 				formatStringWithTokens(replace, [...match]),
 				chunkString.slice(match.index + match[0].length)
 			].join("");
-			matchCount++;
 		}
 
 		if(chunkQueued.buffer){
@@ -46,8 +49,7 @@ export function replaceAll(buffer: Buffer, find: RegExp, replace: string): numbe
 	if(chunkQueued.buffer)
 		writeWithTail(buffer, chunkQueued.buffer, chunkQueued.offset);
 
-	console.log(`Found ${matchCount} matches`);
-	return matchCount;
+	return result;
 }
 
 function writeWithTail(buffer: Buffer, otherBuffer: Buffer, offset: number){
