@@ -7,18 +7,54 @@ import { parallelizer } from "./parallelizer";
 import { cpus } from "os";
 import { walkDirectory } from "./utils";
 
+// Argument definiiton and parsing
 const argv = yargs(hideBin(process.argv))
-	.boolean("in-place")
-	.boolean("dry-run")
-	.boolean("backup")
-	.boolean("sign")
-	.array("directories")
+	.scriptName("amdfriend")
+	.usage("$0 [args] <path/to/library> [.../path/to/other/libraries]")
+	.option("in-place", {
+		alias: "i",
+		describe: "Directly patch the library, as opposed to creating a patched library with `.patched` appended to the file name.",
+		demandOption: false,
+		type: "boolean",
+		default: false
+	})
+	.option("dry-run", {
+		alias: "d",
+		describe: "Do all checking and patching, but DO NOT write anything to disk.",
+		demandOption: false,
+		type: "boolean",
+		default: false
+	})
+	.option("backup", {
+		alias: "b",
+		describe: "Only works in conjunction with `--in-place`; it backs up the original library by copying it and appending `.bak` on its extension.",
+		demandOption: false,
+		type: "boolean",
+		default: false,
+		implies: "in-place"
+	})
+	.option("sign", {
+		alias: "s",
+		describe: "Automatically invoke `codesign` on patched libraries.",
+		demandOption: false,
+		type: "boolean",
+		default: false
+	})
+	.option("directories", {
+		alias: "d",
+		describe: "Scan directories alongside files. It will search for any file with no extension and with extension `.dylib`, as they are the common ones to patch.",
+		demandOption: false,
+		type: "array",
+		default: []
+	})
+	.help()
 	.argv as {
 		$0: string,
 		_: (string|number)[],
 		[x: string]: any
 	};
 
+// CLI CODE
 async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: boolean, backup: boolean, sign: boolean): Promise<void> {
 	console.log(`Analyzing and patching file: ${originalFilePath}`);
 	const p = await patchFile(originalFilePath, dryRun, inPlace, backup);
