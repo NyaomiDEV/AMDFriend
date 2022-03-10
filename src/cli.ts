@@ -5,19 +5,21 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { parallelizer } from "./parallelizer";
 import { cpus } from "os";
+import { walkDirectory } from "./utils";
 
 const argv = yargs(hideBin(process.argv))
 	.boolean("in-place")
 	.boolean("dry-run")
 	.boolean("backup")
 	.boolean("sign")
+	.array("directories")
 	.argv as {
 		$0: string,
 		_: (string|number)[],
 		[x: string]: any
 	};
 
-async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: boolean, backup: boolean, sign: boolean) {
+async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: boolean, backup: boolean, sign: boolean): Promise<void> {
 	console.log(`Analyzing and patching file: ${originalFilePath}`);
 	const p = await patchFile(originalFilePath, dryRun, inPlace, backup);
 	if (p) {
@@ -34,7 +36,7 @@ async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: 
 }
 
 (async () => {
-	if(!argv._[0]){
+	if(!argv._[0] && !argv.directories){
 		console.error("You must specify at least a path to a library as argument!");
 		process.exit(1);
 	}
@@ -42,7 +44,15 @@ async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: 
 	if(argv["dry-run"])
 		console.log("\n\nWarning!\nDry run is active! No files will be actually patched!\n");
 
-	function* promiseGen(): Generator<Promise<any>> {
+	function* promiseGen(): Generator<Promise<void>> {
+		if (argv.directories){
+			for(const dirPath of argv.directories){
+				for(const path of walkDirectory(dirPath, ["", ".dylib"], [".DS_Store"])){
+					const originalFilePath = resolve(path.toString());
+					yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
+				}
+			}
+		}
 		for (const path of argv._) {
 			const originalFilePath = resolve(path.toString());
 			yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
