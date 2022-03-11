@@ -20,11 +20,16 @@ Only use this if you know what you're doing. Also, this is incomplete software.
 
 You will need:
 - Node.js: `brew install nodejs`
-- Yarn: `brew install yarn`
+- Yarn (optional, used for contributions): `brew install yarn`
 
 Install (and update) AMDFriend on your system with this command:
 ```
-$ yarn global add NyaomiDEV/AMDFriend
+$ npm install -g amdfriend
+```
+
+Or, if you've installed yarn
+```
+$ yarn global add amdfriend
 ```
 
 Use it with:
