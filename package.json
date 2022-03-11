@@ -4,7 +4,6 @@
   "main": "dist/index.js",
   "bin": "dist/cli.js",
   "license": "MPL-2.0",
-  "private": true,
   "author": {
     "name": "Naomi Calabretta"
   },
