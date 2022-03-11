@@ -47,6 +47,13 @@ const argv = yargs(hideBin(process.argv))
 		type: "array",
 		default: []
 	})
+	.option("jobs", {
+		alias: "j",
+		describe: "The number of jobs that will be spawned to process the libraries.",
+		demandOption: false,
+		type: "number",
+		default: cpus().length
+	})
 	.help()
 	.argv as {
 		$0: string,
@@ -71,29 +78,34 @@ async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: 
 	console.log(`Finished processing file: ${originalFilePath}`);
 }
 
+function* promiseGen(): Generator<Promise<void>> {
+	if (argv.directories) {
+		for (const dirPath of argv.directories) {
+			for (const path of walkDirectory(dirPath, ["", ".dylib"], [".DS_Store"])) {
+				const originalFilePath = resolve(path.toString());
+				yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
+			}
+		}
+	}
+	for (const path of argv._) {
+		const originalFilePath = resolve(path.toString());
+		yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
+	}
+}
+
 (async () => {
 	if(!argv._[0] && !argv.directories){
 		console.error("You must specify at least a path to a library as argument!");
 		process.exit(1);
 	}
 
-	if(argv["dry-run"])
-		console.log("\n\nWarning!\nDry run is active! No files will be actually patched!\n");
-
-	function* promiseGen(): Generator<Promise<void>> {
-		if (argv.directories){
-			for(const dirPath of argv.directories){
-				for(const path of walkDirectory(dirPath, ["", ".dylib"], [".DS_Store"])){
-					const originalFilePath = resolve(path.toString());
-					yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
-				}
-			}
-		}
-		for (const path of argv._) {
-			const originalFilePath = resolve(path.toString());
-			yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
-		}
+	if(argv.jobs <= 0){
+		console.error("The number of jobs to spawn must be a positive integer greater than zero!");
+		process.exit(1);
 	}
 
-	await parallelizer(promiseGen(), cpus().length);
+	if (argv["dry-run"])
+		console.log("\n\nWarning!\nDry run is active! No files will be actually patched!\n");
+
+	await parallelizer(promiseGen(), argv.jobs);
 })();

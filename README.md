@@ -41,6 +41,7 @@ $ amdfriend "/path/to/your/library.dylib"
 |`--sign`|Boolean|`false`|Automatically invoke `codesign` on patched libraries.|
 |`--dry-run`|Boolean|`false`|Do all checking and patching, but DO NOT write anything to disk. This is useful to test performance and to scan for matches in a given library.|
 |`--directories`|Array|Not set|Scan directories alongside files. It will search for any file with no extension and with extension `.dylib`, as they are the common ones to patch.|
+|`--jobs`|Number|N. of threads available|The number of jobs that will be spawned to process the libraries.|
 
 ## Contributing
 
