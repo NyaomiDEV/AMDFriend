@@ -66,7 +66,7 @@ Scan for patchable files in a directory:
 $ amdfriend --dry-run --directories /path/to/dir /path/to/another/dir | grep "Routines found"
 ```
 
-Scan for patchable files and patch them (NOT recommended):
+Scan for patchable files and patch them (NOT recommended, might use `sudo` in front of the command if patching directories not owned by the current user):
 ```
 $ amdfriend --in-place --backup --sign --directories /path/to/dir /path/to/another/dir
 ```
