@@ -1,18 +1,17 @@
-import { exec } from "child_process";
-import { promisify } from "util";
 import { copyFile, readFile, writeFile } from "fs/promises";
 import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
-import { PatchingResult } from "./types";
+import { PatchingResult, PatchOptions } from "./types";
+import { spawnProcess } from "./utils";
 
-export async function patchFile(filePath: string, dryRun: boolean, inPlace: boolean, backup: boolean): Promise<PatchingResult|null> {
+export async function patchFile(filePath: string, options: PatchOptions): Promise<PatchingResult|null> {
 	const result: PatchingResult = {
 		patchedPath: resolve(dirname(filePath), basename(filePath, extname(filePath)) + ".patched" + extname(filePath)),
 		patchedRoutines: []
 	};
 
-	if (inPlace)
+	if (options.inPlace)
 		result.patchedPath = filePath;
 
 	let buffer;
@@ -40,17 +39,13 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 	));
 
 	if(result.patchedRoutines.length){
-		if (!dryRun){
+		if (!options.dryRun){
 
-			if(inPlace && backup)
+			if(options.inPlace && options.backup)
 				await copyFile(filePath, filePath + ".bak");
 
 			await writeFile(result.patchedPath, buffer);
 		}
-
-		const xattrCmd = `xattr -cr "${result.patchedPath}"`;
-		if (!dryRun)
-			await promisify(exec)(xattrCmd);
 
 		return result;
 	}
@@ -58,8 +53,12 @@ export async function patchFile(filePath: string, dryRun: boolean, inPlace: bool
 	return null;
 }
 
+export async function clearXAFile(filePath: string, dryRun: boolean){
+	if (!dryRun)
+		await spawnProcess("/usr/bin/xattr", ["-c", filePath]);
+}
+
 export async function signFile(filePath: string, dryRun: boolean){
-	const signCmd = `codesign --force --deep --sign - "${filePath}"`;
 	if(!dryRun)
-		await promisify(exec)(signCmd);
+		await spawnProcess("/usr/bin/codesign", ["--force", "--sign", "-", filePath]);
 }

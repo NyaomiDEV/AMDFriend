@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import { resolve } from "path";
-import { patchFile, signFile } from ".";
+import { clearXAFile, patchFile, signFile } from ".";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { parallelizer } from "./parallelizer";
 import { cpus } from "os";
 import { walkDirectory } from "./utils";
+import { PatchOptions } from "./types";
 
 // Argument definiiton and parsing
 const argv = yargs(hideBin(process.argv))
@@ -40,6 +41,13 @@ const argv = yargs(hideBin(process.argv))
 		type: "boolean",
 		default: false
 	})
+	.option("clear-xa", {
+		alias: "c",
+		describe: "Automatically clear extended attributes on patched libraries.",
+		demandOption: false,
+		type: "boolean",
+		default: true
+	})
 	.option("directories", {
 		alias: "D",
 		describe: "Scan directories alongside files. It will search for any file with no extension and with extension `.dylib`, as they are the common ones to patch.",
@@ -61,35 +69,65 @@ const argv = yargs(hideBin(process.argv))
 		[x: string]: any
 	};
 
+
 // CLI CODE
-async function patchPromise(originalFilePath: string, dryRun: boolean, inPlace: boolean, backup: boolean, sign: boolean): Promise<void> {
+async function patchPromise(originalFilePath: string, options: PatchOptions): Promise<void> {
 	console.log(`Analyzing and patching file: ${originalFilePath}`);
-	const p = await patchFile(originalFilePath, dryRun, inPlace, backup);
+	const p = await patchFile(originalFilePath, options);
+
 	if (p) {
-		if (sign)
+
+		if (options.clearXA)
+			await clearXAFile(p.patchedPath, argv["dry-run"]);
+	
+		if (options.sign)
 			await signFile(p.patchedPath, argv["dry-run"]);
+
 		console.log(`Routines found for ${originalFilePath}:`);
 		console.log(
-			p.patchedRoutines.map(x => `- <${x.bytes.toString("hex").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${x.offset} (Hex: ${x.offset.toString(16)})`).join("\n")
+			p.patchedRoutines
+				.map(x => `- <${x.bytes.toString("hex").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${x.offset} (Hex: ${x.offset.toString(16)})`)
+				.join("\n")
 		);
+
 		console.log(`File ${originalFilePath} was patched.`);
 		console.log(`Patched file location: ${p.patchedPath}`);
+
 	}
+
 	console.log(`Finished processing file: ${originalFilePath}`);
 }
 
 function* promiseGen(): Generator<Promise<void>> {
 	if (argv.directories) {
 		for (const dirPath of argv.directories) {
-			for (const path of walkDirectory(dirPath, ["", ".dylib"], [".DS_Store"])) {
-				const originalFilePath = resolve(path.toString());
-				yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
+			for (const dirent of walkDirectory(dirPath, ["", ".dylib"], [".DS_Store"])) {
+				const originalFilePath = resolve(dirent.name);
+				yield patchPromise(
+					originalFilePath,
+					{
+						dryRun: argv["dry-run"],
+						inPlace: argv["in-place"],
+						backup: argv.backup,
+						clearXA: argv["clear-xa"],
+						sign: argv.sign
+					}
+				);
 			}
 		}
 	}
 	for (const path of argv._) {
 		const originalFilePath = resolve(path.toString());
-		yield patchPromise(originalFilePath, argv["dry-run"], argv["in-place"], argv.backup, argv.sign);
+		yield patchPromise(
+			originalFilePath,
+			{
+				dryRun: argv["dry-run"],
+				inPlace: argv["in-place"],
+				backup: argv.backup,
+				clearXA: argv["clear-xa"],
+				sign: argv.sign
+			}
+		);
 	}
 }
 
