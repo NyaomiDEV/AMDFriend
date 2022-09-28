@@ -1,9 +1,12 @@
-import { copyFile, readFile, writeFile } from "fs/promises";
+import { mkdtempSync } from "fs";
+import { copyFile, readFile, rename, writeFile } from "fs/promises";
 import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
 import { PatchingResult, PatchOptions } from "./types";
 import { spawnProcess } from "./utils";
+
+const _tempDir = mkdtempSync("amdfriend");
 
 export async function patchFile(filePath: string, options: PatchOptions): Promise<PatchingResult|null> {
 	const result: PatchingResult = {
@@ -44,7 +47,16 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 			if(options.inPlace && options.backup)
 				await copyFile(filePath, filePath + ".bak");
 
-			await writeFile(result.patchedPath, buffer);
+			const _tempFile = resolve(_tempDir, basename(filePath));
+			await writeFile(_tempFile, buffer);
+
+			if (options.clearXA)
+				await clearXAFile(_tempFile);
+
+			if (options.sign)
+				await signFile(_tempFile);
+
+			await rename(_tempFile, result.patchedPath);
 		}
 
 		return result;
@@ -53,12 +65,10 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 	return null;
 }
 
-export async function clearXAFile(filePath: string, dryRun: boolean){
-	if (!dryRun)
-		await spawnProcess("/usr/bin/xattr", ["-c", filePath]);
+export async function clearXAFile(filePath: string){
+	return await spawnProcess("/usr/bin/xattr", ["-c", filePath]);
 }
 
-export async function signFile(filePath: string, dryRun: boolean){
-	if(!dryRun)
-		await spawnProcess("/usr/bin/codesign", ["--force", "--sign", "-", filePath]);
+export async function signFile(filePath: string){
+	return await spawnProcess("/usr/bin/codesign", ["--force", "--sign", "-", filePath]);
 }

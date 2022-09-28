@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { resolve } from "path";
-import { clearXAFile, patchFile, signFile } from ".";
+import { patchFile } from ".";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { parallelizer } from "./parallelizer";
@@ -75,12 +75,6 @@ async function patchPromise(originalFilePath: string, options: PatchOptions): Pr
 	const p = await patchFile(originalFilePath, options);
 
 	if (p) {
-
-		if (options.clearXA)
-			await clearXAFile(p.patchedPath, argv["dry-run"]);
-	
-		if (options.sign)
-			await signFile(p.patchedPath, argv["dry-run"]);
 
 		console.log(`Routines found for ${originalFilePath}:`);
 		console.log(
