@@ -69,7 +69,6 @@ const argv = yargs(hideBin(process.argv))
 		[x: string]: any
 	};
 
-
 // CLI CODE
 async function patchPromise(originalFilePath: string, options: PatchOptions): Promise<void> {
 	console.log(`Analyzing and patching file: ${originalFilePath}`);
@@ -132,7 +131,7 @@ function* promiseGen(): Generator<Promise<void>> {
 }
 
 (async () => {
-	if(!argv._[0] && !argv.directories){
+	if(!argv._.length && !argv.directories.length){
 		console.error("You must specify at least a path to a library as argument!");
 		process.exit(1);
 	}
