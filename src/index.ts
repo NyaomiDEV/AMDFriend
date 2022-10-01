@@ -4,7 +4,7 @@ import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
 import { PatchingResult, PatchOptions } from "./types";
-import { spawnProcess } from "./utils";
+import { md5, spawnProcess } from "./utils";
 
 const _tempDir = mkdtempSync("amdfriend");
 
@@ -47,7 +47,7 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 			if(options.inPlace && options.backup)
 				await copyFile(filePath, filePath + ".bak");
 
-			const _tempFile = resolve(_tempDir, basename(filePath));
+			const _tempFile = resolve(_tempDir, md5(filePath + Date.now().toString()));
 			await writeFile(_tempFile, buffer);
 
 			if (options.clearXA)

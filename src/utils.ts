@@ -1,6 +1,7 @@
 import { Dirent, readdirSync, statSync } from "fs";
 import { resolve, extname, basename } from "path";
 import { spawn } from "child_process";
+import { createHash } from "crypto";
 
 export function walkDirectoryOld(dir: string, fileTypes: string[], exclude: string[]): string[]{
 	const result: string[] = [];
@@ -52,4 +53,8 @@ export function spawnProcess(command: string, args: string[]): Promise<number | 
 			resolve(code);
 		});
 	});
+}
+
+export function md5(data: string): string {
+	return createHash("md5").update(data).digest("hex");
 }
