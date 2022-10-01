@@ -1,12 +1,13 @@
 import { mkdtempSync } from "fs";
 import { copyFile, readFile, rename, writeFile } from "fs/promises";
+import { tmpdir } from "os";
 import { basename, dirname, extname, resolve } from "path";
 import regexes from "./regexes";
 import { replaceAll } from "./routines";
 import { PatchingResult, PatchOptions } from "./types";
 import { md5, spawnProcess } from "./utils";
 
-const _tempDir = mkdtempSync("amdfriend");
+const _tempDir = mkdtempSync(resolve(tmpdir(), "amdfriend-"));
 
 export async function patchFile(filePath: string, options: PatchOptions): Promise<PatchingResult|null> {
 	const result: PatchingResult = {
