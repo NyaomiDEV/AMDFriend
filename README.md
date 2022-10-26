@@ -14,6 +14,10 @@ Tomnic did outline some general bit patterns to search for, but then he admitted
 
 Only use this if you know what you're doing. Also, this is incomplete software.
 
+### From the Releases section
+
+Just grab the latest binary from the Releases section, mark it as executable, clear XAttrs as I cannot sign it, and use it. You can put it in your PATH (usually `/usr/local/bin`) if you want, for easy access.
+
 ### As a Node module installed globally on the system
 
 You will need:
