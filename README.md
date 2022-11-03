@@ -2,6 +2,10 @@
 
 Note: All of this is experimental software and it should only be referred to for the purpose of testing.
 
+The issue section has been disabled because people started reporting issues with single apps and libraries, and not with AMDFriend. This is EXPERIMENTAL SOFTWARE and NO SUPPORT FOR SPECIFIC LIBRARIES WAS EVER GIVEN. Again, you are on your own.
+
+If there are issues SPECIFIC to AMDFriend I am sure y'all will know how to reach me eventually.
+
 ## Introduction
 
 This project stems directly from the excellent [guide](https://www.macos86.it/topic/5489-tutorial-for-patching-binaries-for-amd-hackintosh-compatibility/) made by tomnic over at the MacOS86 forums.
