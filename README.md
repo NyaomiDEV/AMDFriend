@@ -46,6 +46,7 @@ amdfriend "/path/to/your/library.dylib"
 ## Observed quirks
 
 - Discord's Krisp module will only work if SIP is disabled. Reason is that the system usually won't load libraries that are not signed with the same key as the main application.
+- Do NOT patch anything in Autocad 2024 -- there's a false positive inside one of the libraries.
 
 ## Command line arguments
 
