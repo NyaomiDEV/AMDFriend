@@ -1,0 +1,29 @@
+{
+  "name": "@nyaomidev/amdfriend",
+  "version": "1.1.0",
+  "exports": "./src/cli.ts",
+  "tasks": {
+    "test": "deno run --watch --allow-read --allow-write --allow-run src/cli.ts",
+    "start": "deno run --allow-read --allow-write --allow-run src/cli.ts"
+  },
+  "imports": {
+    "yargs": "https://deno.land/x/yargs/deno.ts",
+    "@std/fs": "jsr:@std/fs",
+    "@std/io": "jsr:@std/io",
+    "@std/path": "jsr:@std/path",
+    "@std/crypto": "jsr:@std/crypto",
+    "@std/encoding": "jsr:@std/encoding"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true
+  }
+}

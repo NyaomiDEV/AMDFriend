@@ -10,8 +10,6 @@ If there are issues SPECIFIC to AMDFriend I am sure y'all will know how to reach
 
 This project stems directly from the excellent [guide](https://www.macos86.it/topic/5489-tutorial-for-patching-binaries-for-amd-hackintosh-compatibility/) made by tomnic over at the MacOS86 forums.
 
-Since userland patching is not possible with Lilu on Big Sur+, manual patching of libraries of certain programs is needed to get them to work reliably on AMD hackintoshes.
-
 Tomnic did outline some general bit patterns to search for, but then he admitted that a crude find and replace wouldn't be viable. This project uses regular expressions to find those patterns and patch them.
 
 ## Usage
@@ -21,27 +19,6 @@ Only use this if you know what you're doing. Also, this is incomplete software.
 ### From the Releases section
 
 Just grab the latest binary from the Releases section, mark it as executable, clear XAttrs as I cannot sign it, and use it. You can put it in your PATH (usually `/usr/local/bin`) if you want, for easy access.
-
-### As a Node module installed globally on the system
-
-You will need:
-- Node.js: `brew install nodejs`
-- Yarn (optional, used for contributions): `brew install yarn`
-
-Install (and update) AMDFriend on your system with this command:
-```
-npm install -g amdfriend
-```
-
-Or, if you've installed yarn
-```
-yarn global add amdfriend
-```
-
-Use it with:
-```
-amdfriend "/path/to/your/library.dylib"
-```
 
 ## Observed quirks
 
@@ -67,8 +44,8 @@ If you want to contribute to this project, clone it to your computer!
 ```sh
 git clone https://github.com/NyaomiDEV/AMDFriend
 cd AMDFriend
-yarn
-yarn test "/path/to/your/library.dylib"
+deno install
+deno task start "/path/to/your/library.dylib"
 ```
 
 ## Tips and tricks

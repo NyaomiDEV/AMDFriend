@@ -1,38 +1,19 @@
-import { Dirent, readdirSync, statSync } from "fs";
-import { resolve, extname, basename } from "path";
-import { spawn } from "child_process";
-import { createHash } from "crypto";
+import { walkSync, WalkEntry } from "@std/fs";
+import { resolve, extname, basename } from "@std/path";
+import { crypto } from "@std/crypto";
+import { encodeHex } from "@std/encoding/hex";
 
-export function walkDirectoryOld(dir: string, fileTypes: string[], exclude: string[]): string[]{
-	const result: string[] = [];
+export function walkDirectory(dir: string, fileTypes: string[], exclude: string[]): WalkEntry[] {
+	const result: WalkEntry[] = [];
+	const files = walkSync(dir);
 
-	function __walk(currentPath) {
-		const files = readdirSync(currentPath);
-		for (const i in files) {
-			const curFile = resolve(currentPath, files[i]);
-			const _stat = statSync(curFile);
-			if (_stat.isFile() && fileTypes.includes(extname(curFile)) && !exclude.includes(basename(curFile)))
-				result.push(curFile);
-			else if (_stat.isDirectory())
-				__walk(curFile);
-		}
-	}
+	for (const entry of files) {
+		entry.name = resolve(dir, entry.name);
 
-	__walk(dir);
-	return result;
-}
-
-export function walkDirectory(dir: string, fileTypes: string[], exclude: string[]): Dirent[] {
-	const result: Dirent[] = [];
-	const files = readdirSync(dir, { withFileTypes: true });
-
-	for (const dirent of files) {
-		dirent.name = resolve(dir, dirent.name);
-
-		if (dirent.isFile() && fileTypes.includes(extname(dirent.name)) && !exclude.includes(basename(dirent.name)))
-			result.push(dirent);
-		else if (dirent.isDirectory())
-			result.push(...walkDirectory(dirent.name, fileTypes, exclude));
+		if (entry.isFile && fileTypes.includes(extname(entry.name)) && !exclude.includes(basename(entry.name)))
+			result.push(entry);
+		else if (entry.isDirectory)
+			result.push(...walkDirectory(entry.name, fileTypes, exclude));
 	}
 
 	return result;
@@ -40,21 +21,21 @@ export function walkDirectory(dir: string, fileTypes: string[], exclude: string[
 
 export function spawnProcess(command: string, args: string[]): Promise<number | null> {
 	return new Promise((resolve, reject) => {
-		const spawnedProcess = spawn(
+		const spawnedProcess = new Deno.Command(
 			command,
-			args,
-			{ stdio: "inherit" }
-		);
+			{ args }
+		).spawn();
 
-		spawnedProcess.on("exit", code => {
-			if (code)
-				reject(code);
+		spawnedProcess.status.then(status => {
+			if (!status.success)
+				reject(status.code);
 
-			resolve(code);
-		});
+			resolve(status.code);
+		})
 	});
 }
 
 export function md5(data: string): string {
-	return createHash("md5").update(data).digest("hex");
+	const messageBuffer = new TextEncoder().encode(data);
+	return encodeHex(crypto.subtle.digestSync("MD5", messageBuffer));
 }

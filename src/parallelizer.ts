@@ -1,4 +1,4 @@
-async function promiseState(promise: Promise<any>): Promise<"pending" | "resolved" | "rejected"> {
+async function promiseState(promise: Promise<unknown>): Promise<"pending" | "resolved" | "rejected"> {
 	try {
 		const v = await Promise.race([promise, 0]);
 		if(v === 0)
@@ -10,10 +10,10 @@ async function promiseState(promise: Promise<any>): Promise<"pending" | "resolve
 	}
 }
 
-export function parallelizer(generator: Generator<Promise<any>>, limit: number): Promise<any[]> {
-	const promises: Promise<any>[] = [];
+export function parallelizer(generator: Generator<Promise<unknown>>, limit: number): Promise<unknown[]> {
+	const promises: Promise<unknown>[] = [];
 	let semaphore = 0;
-	const results: any[] = [];
+	const results: unknown[] = [];
 
 	return new Promise(resolve => {
 		async function callback() {

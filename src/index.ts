@@ -1,13 +1,13 @@
-import { mkdtempSync } from "fs";
-import { copyFile, readFile, rename, writeFile } from "fs/promises";
-import { tmpdir } from "os";
-import { basename, dirname, extname, resolve } from "path";
-import regexes from "./regexes";
-import { replaceAll } from "./routines";
-import { PatchingResult, PatchOptions } from "./types";
-import { md5, spawnProcess } from "./utils";
+import { basename, dirname, extname, resolve } from "@std/path";
+import { copy, move } from "@std/fs";
+import regexes from "./regexes.ts";
+import { replaceAll } from "./routines.ts";
+import type { PatchingResult, PatchOptions } from "./types.d.ts";
+import { md5, spawnProcess } from "./utils.ts";
 
-const _tempDir = mkdtempSync(resolve(tmpdir(), "amdfriend-"));
+const _tempDir = await Deno.makeTempDir({
+	prefix: "amdfriend-"
+});
 
 export async function patchFile(filePath: string, options: PatchOptions): Promise<PatchingResult|null> {
 	const result: PatchingResult = {
@@ -18,15 +18,11 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 	if (options.inPlace)
 		result.patchedPath = filePath;
 
-	let buffer;
+	let buffer: Uint8Array<ArrayBufferLike>;
 	try{
-		buffer = await readFile(filePath);
-	}catch(err: any){
-		if(err.code === "EISDIR")
-			console.log(`${filePath} is a directory. Skipping...`);
-		else
-			console.error(`Error while opening ${filePath}: ${err.message}`);
-
+		buffer = await Deno.readFile(filePath);
+	}catch(_){
+		console.log(`${filePath} is a directory. Skipping...`);
 		return null;
 	}
 
@@ -46,10 +42,10 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 		if (!options.dryRun){
 
 			if(options.inPlace && options.backup)
-				await copyFile(filePath, filePath + ".bak");
+				await copy(filePath, filePath + ".bak", { overwrite: true });
 
 			const _tempFile = resolve(_tempDir, md5(filePath + Date.now().toString()));
-			await writeFile(_tempFile, buffer);
+			await Deno.writeFile(_tempFile, buffer);
 
 			if (options.clearXA)
 				await clearXAFile(_tempFile);
@@ -57,7 +53,9 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 			if (options.sign)
 				await signFile(_tempFile);
 
-			await rename(_tempFile, result.patchedPath);
+			await move(_tempFile, result.patchedPath, {
+				overwrite: true
+			});
 		}
 
 		return result;

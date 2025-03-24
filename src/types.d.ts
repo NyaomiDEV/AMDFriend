@@ -1,6 +1,6 @@
 export type Routine = {
 	offset: number,
-	bytes: Buffer
+	bytes: Uint8Array<ArrayBufferLike>
 }
 
 export type PatchingResult = {

@@ -1,15 +1,12 @@
-#!/usr/bin/env node
-import { resolve } from "path";
-import { patchFile } from ".";
+import { resolve } from "@std/path";
+import { patchFile } from "./index.ts";
 import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import { parallelizer } from "./parallelizer";
-import { cpus } from "os";
-import { walkDirectory } from "./utils";
-import { PatchOptions } from "./types";
+import { parallelizer } from "./parallelizer.ts";
+import { walkDirectory } from "./utils.ts";
+import type { PatchOptions } from "./types.d.ts";
 
 // Argument definiiton and parsing
-const argv = yargs(hideBin(process.argv))
+const argv = yargs(Deno.args)
 	.scriptName("amdfriend")
 	.usage("$0 [args] <path/to/library> [.../path/to/other/libraries]")
 	.option("in-place", {
@@ -60,14 +57,10 @@ const argv = yargs(hideBin(process.argv))
 		describe: "The number of jobs that will be spawned to process the libraries.",
 		demandOption: false,
 		type: "number",
-		default: cpus().length
+		default: navigator.hardwareConcurrency
 	})
 	.help()
-	.argv as {
-		$0: string,
-		_: (string|number)[],
-		[x: string]: any
-	};
+	.parse();
 
 // CLI CODE
 async function patchPromise(originalFilePath: string, options: PatchOptions): Promise<void> {
@@ -79,7 +72,7 @@ async function patchPromise(originalFilePath: string, options: PatchOptions): Pr
 		console.log(`Routines found for ${originalFilePath}:`);
 		console.log(
 			p.patchedRoutines
-				.map(x => `- <${x.bytes.toString("hex").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${x.offset} (Hex: ${x.offset.toString(16)})`)
+				.map(x => `- <${Array.from(x.bytes).map(y => y.toString(16).padStart(2, "0")).join("").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${x.offset} (Hex: ${x.offset.toString(16)})`)
 				.join("\n")
 		);
 
@@ -127,12 +120,12 @@ function* promiseGen(): Generator<Promise<void>> {
 (async () => {
 	if(!argv._.length && !argv.directories.length){
 		console.error("You must specify at least a path to a library as argument!");
-		process.exit(1);
+		Deno.exit(1);
 	}
 
 	if(argv.jobs <= 0){
 		console.error("The number of jobs to spawn must be a positive integer greater than zero!");
-		process.exit(1);
+		Deno.exit(1);
 	}
 
 	if (argv["dry-run"])
