@@ -43,8 +43,16 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 	let buffer: Uint8Array<ArrayBufferLike>;
 	try {
 		buffer = await Deno.readFile(filePath);
-	} catch (_) {
-		console.log(`${filePath} is a directory. Skipping...`);
+	// deno-lint-ignore no-explicit-any
+	} catch (e: any) {
+		switch(e.code){
+			case "ENOENT":
+				console.log(`Cannot read ${filePath} as it was not found.`);
+				break;
+			default:
+				console.log(`Cannot read ${filePath}. Skipping...`);
+				break;
+		}
 		return null;
 	}
 

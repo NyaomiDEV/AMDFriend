@@ -1,10 +1,11 @@
 {
   "name": "@nyaomidev/amdfriend",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "exports": "./src/cli.ts",
   "tasks": {
     "test": "deno run --watch --allow-read --allow-write --allow-run src/cli.ts",
-    "start": "deno run --allow-read --allow-write --allow-run src/cli.ts"
+    "start": "deno run --allow-read --allow-write --allow-run src/cli.ts",
+    "compile": "deno compile --allow-read --allow-write --allow-run --output amdfriend-deno --include src/worker.ts src/cli.ts"
   },
   "imports": {
     "yargs": "https://deno.land/x/yargs/deno.ts",
