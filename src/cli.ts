@@ -1,9 +1,8 @@
 import { resolve } from "@std/path";
-import { patchFile } from "./index.ts";
 import yargs from "yargs";
 import { parallelizer } from "./parallelizer.ts";
 import { walkDirectory } from "./utils.ts";
-import type { PatchOptions } from "./types.d.ts";
+import type { PatchingResult } from "./types.d.ts";
 
 // Argument definiiton and parsing
 const argv = yargs(Deno.args)
@@ -63,73 +62,62 @@ const argv = yargs(Deno.args)
 	.parse();
 
 // CLI CODE
-async function patchPromise(originalFilePath: string, options: PatchOptions): Promise<void> {
-	console.log(`Analyzing and patching file: ${originalFilePath}`);
-	const p = await patchFile(originalFilePath, options);
-
-	if (p) {
-
-		console.log(`Routines found for ${originalFilePath}:`);
-		console.log(
-			p.patchedRoutines
-				.map(x => `- <${Array.from(x.bytes).map(y => y.toString(16).padStart(2, "0")).join("").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${x.offset} (Hex: ${x.offset.toString(16)})`)
-				.join("\n")
+function spawnWorker(originalFilePath, options): Promise<PatchingResult | undefined> {
+	return new Promise(resolve => {
+		const worker = new Worker(
+			new URL("./worker.ts", import.meta.url).href,
+			{ type: "module" }
 		);
-
-		console.log(`File ${originalFilePath} was patched.`);
-		console.log(`Patched file location: ${p.patchedPath}`);
-
-	}
-
-	console.log(`Finished processing file: ${originalFilePath}`);
+		worker.onmessage = (e) => {
+			resolve(e.data);
+		};
+		worker.postMessage({
+			originalFilePath,
+			options
+		});
+	});
 }
 
-function* promiseGen(): Generator<Promise<void>> {
+async function filePaths(): Promise<string[]> {
+	const paths: string[] = [];
 	if (argv.directories) {
 		for (const dirPath of argv.directories) {
-			for (const dirent of walkDirectory(dirPath, ["", ".dylib"], [".DS_Store"])) {
-				const originalFilePath = resolve(dirent.name);
-				yield patchPromise(
-					originalFilePath,
-					{
-						dryRun: argv["dry-run"],
-						inPlace: argv["in-place"],
-						backup: argv.backup,
-						clearXA: argv["clear-xa"],
-						sign: argv.sign
-					}
-				);
+			for (const dirent of await walkDirectory(dirPath, ["", ".dylib"], [/^(?!\.DS_Store$).*$/])) {
+				paths.push(dirent.path);
 			}
 		}
 	}
 	for (const path of argv._) {
-		const originalFilePath = resolve(path.toString());
-		yield patchPromise(
-			originalFilePath,
-			{
-				dryRun: argv["dry-run"],
-				inPlace: argv["in-place"],
-				backup: argv.backup,
-				clearXA: argv["clear-xa"],
-				sign: argv.sign
-			}
-		);
+		paths.push(resolve(path.toString()));
+	}
+	return paths;
+}
+
+function* workerDispatcher(paths: string[]): Generator<Promise<PatchingResult | undefined>>{
+	for(const path of paths){
+		yield spawnWorker(path, {
+			dryRun: argv["dry-run"],
+			inPlace: argv["in-place"],
+			backup: argv.backup,
+			clearXA: argv["clear-xa"],
+			sign: argv.sign
+		});
 	}
 }
 
-(async () => {
-	if(!argv._.length && !argv.directories.length){
-		console.error("You must specify at least a path to a library as argument!");
-		Deno.exit(1);
-	}
+if(!argv._.length && !argv.directories.length){
+	console.error("You must specify at least a path to a library as argument!");
+	Deno.exit(1);
+}
 
-	if(argv.jobs <= 0){
-		console.error("The number of jobs to spawn must be a positive integer greater than zero!");
-		Deno.exit(1);
-	}
+if(argv.jobs <= 0){
+	console.error("The number of jobs to spawn must be a positive integer greater than zero!");
+	Deno.exit(1);
+}
 
-	if (argv["dry-run"])
-		console.log("\n\nWarning!\nDry run is active! No files will be actually patched!\n");
+if (argv["dry-run"])
+	console.log("Warning!\nDry run is active! No files will be actually patched!\n");
 
-	await parallelizer(promiseGen(), argv.jobs);
-})();
+const paths = await filePaths();
+await parallelizer(workerDispatcher(paths), argv.jobs);
+

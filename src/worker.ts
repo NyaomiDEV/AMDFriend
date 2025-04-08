@@ -1,15 +1,37 @@
+/// <reference lib="webworker" />
+
 import { basename, dirname, extname, resolve } from "@std/path";
 import { copy, move } from "@std/fs";
 import regexes from "./regexes.ts";
 import { replaceAll } from "./routines.ts";
 import type { PatchingResult, PatchOptions } from "./types.d.ts";
-import { md5, spawnProcess } from "./utils.ts";
+import { spawnProcess } from "./utils.ts";
 
-const _tempDir = await Deno.makeTempDir({
-	prefix: "amdfriend-"
-});
+self.onmessage = async (e) => {
+	const { originalFilePath, options } = e.data;
+	
+	console.log(`Analyzing and patching file: ${originalFilePath}`);
+	const p = await patchFile(originalFilePath, options);
 
-export async function patchFile(filePath: string, options: PatchOptions): Promise<PatchingResult|null> {
+	if (p) {
+
+		console.log(`Routines found for ${originalFilePath}:`);
+		console.log(
+			p.patchedRoutines
+				.map(x => `- <${Array.from(x.bytes).map(y => y.toString(16).padStart(2, "0")).join("").toUpperCase().match(/.{1,2}/g)!.join(" ")}> at offset ${x.offset} (Hex: ${x.offset.toString(16)})`)
+				.join("\n")
+		);
+
+		console.log(`File ${originalFilePath} was patched.`);
+		console.log(`Patched file location: ${p.patchedPath}`);
+	}
+
+	console.log(`Finished processing file: ${originalFilePath}`);
+	self.postMessage(p || undefined);
+	self.close();
+}
+
+export async function patchFile(filePath: string, options: PatchOptions): Promise<PatchingResult | null> {
 	const result: PatchingResult = {
 		patchedPath: resolve(dirname(filePath), basename(filePath, extname(filePath)) + ".patched" + extname(filePath)),
 		patchedRoutines: []
@@ -19,9 +41,9 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 		result.patchedPath = filePath;
 
 	let buffer: Uint8Array<ArrayBufferLike>;
-	try{
+	try {
 		buffer = await Deno.readFile(filePath);
-	}catch(_){
+	} catch (_) {
 		console.log(`${filePath} is a directory. Skipping...`);
 		return null;
 	}
@@ -38,13 +60,15 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 		regexes.__intel_fast_memset_or_memcpy_A.replace
 	));
 
-	if(result.patchedRoutines.length){
-		if (!options.dryRun){
+	if (result.patchedRoutines.length) {
+		if (!options.dryRun) {
 
-			if(options.inPlace && options.backup)
+			if (options.inPlace && options.backup)
 				await copy(filePath, filePath + ".bak", { overwrite: true });
 
-			const _tempFile = resolve(_tempDir, md5(filePath + Date.now().toString()));
+			const _tempFile = await Deno.makeTempFile({
+				prefix: "amdfriend-"
+			});
 			await Deno.writeFile(_tempFile, buffer);
 
 			if (options.clearXA)
@@ -64,10 +88,10 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 	return null;
 }
 
-export async function clearXAFile(filePath: string){
+export async function clearXAFile(filePath: string) {
 	return await spawnProcess("/usr/bin/xattr", ["-c", filePath]);
 }
 
-export async function signFile(filePath: string){
+export async function signFile(filePath: string) {
 	return await spawnProcess("/usr/bin/codesign", ["--force", "--sign", "-", filePath]);
 }

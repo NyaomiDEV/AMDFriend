@@ -1,19 +1,15 @@
-import { walkSync, WalkEntry } from "@std/fs";
-import { resolve, extname, basename } from "@std/path";
+import { walk, type WalkEntry } from "@std/fs";
 import { crypto } from "@std/crypto";
 import { encodeHex } from "@std/encoding/hex";
 
-export function walkDirectory(dir: string, fileTypes: string[], exclude: string[]): WalkEntry[] {
+export async function walkDirectory(dir: string, fileTypes: string[], match: RegExp[]): Promise<WalkEntry[]> {
 	const result: WalkEntry[] = [];
-	const files = walkSync(dir);
-
-	for (const entry of files) {
-		entry.name = resolve(dir, entry.name);
-
-		if (entry.isFile && fileTypes.includes(extname(entry.name)) && !exclude.includes(basename(entry.name)))
+	const files = walk(dir, { exts: fileTypes, match });
+	for await (const entry of files) {
+		if (entry.isFile)
 			result.push(entry);
 		else if (entry.isDirectory)
-			result.push(...walkDirectory(entry.name, fileTypes, exclude));
+			result.push(...await walkDirectory(entry.path, fileTypes, match));
 	}
 
 	return result;

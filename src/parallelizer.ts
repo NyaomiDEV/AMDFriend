@@ -1,3 +1,5 @@
+import type { PatchingResult } from "./types.d.ts";
+
 async function promiseState(promise: Promise<unknown>): Promise<"pending" | "resolved" | "rejected"> {
 	try {
 		const v = await Promise.race([promise, 0]);
@@ -10,10 +12,10 @@ async function promiseState(promise: Promise<unknown>): Promise<"pending" | "res
 	}
 }
 
-export function parallelizer(generator: Generator<Promise<unknown>>, limit: number): Promise<unknown[]> {
-	const promises: Promise<unknown>[] = [];
+export function parallelizer(generator: Generator<Promise<PatchingResult | undefined>>, limit: number): Promise<unknown[]> {
+	const promises: Promise<PatchingResult | undefined>[] = [];
 	let semaphore = 0;
-	const results: unknown[] = [];
+	const results: PatchingResult[] = [];
 
 	return new Promise(resolve => {
 		async function callback() {
@@ -36,7 +38,7 @@ export function parallelizer(generator: Generator<Promise<unknown>>, limit: numb
 				semaphore++;
 				promises.push(promise.value);
 				promise.value
-					.then(result => results.push(result))
+					.then(result => { if(result) results.push(result) })
 					.catch(console.error)
 					.finally(() => {
 						semaphore--;
