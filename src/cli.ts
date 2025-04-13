@@ -82,7 +82,7 @@ async function filePaths(): Promise<string[]> {
 	const paths: string[] = [];
 	if (argv.directories) {
 		for (const dirPath of argv.directories) {
-			for (const dirent of await walkDirectory(dirPath, ["", ".dylib"], [/^(?!\.DS_Store$).*$/])) {
+			for (const dirent of await walkDirectory(dirPath, ["", ".dylib", ".node"], [/^(?!\.DS_Store$).*$/])) {
 				paths.push(dirent.path);
 			}
 		}
