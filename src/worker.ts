@@ -37,20 +37,19 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 		patchedRoutines: []
 	};
 
-	if (options.inPlace)
-		result.patchedPath = filePath;
-
 	let buffer: Uint8Array<ArrayBufferLike>;
+	let stat: Deno.FileInfo;
 	try {
+		stat = await Deno.stat(filePath);
 		buffer = await Deno.readFile(filePath);
 	// deno-lint-ignore no-explicit-any
 	} catch (e: any) {
 		switch(e.code){
 			case "ENOENT":
-				console.log(`Cannot read ${filePath} as it was not found.`);
+				console.error(`Cannot read ${filePath} as it was not found.`);
 				break;
 			default:
-				console.log(`Cannot read ${filePath}. Skipping...`);
+				console.error(`Cannot read ${filePath}. Skipping...`);
 				break;
 		}
 		return null;
@@ -70,9 +69,11 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 
 	if (result.patchedRoutines.length) {
 		if (!options.dryRun) {
-
-			if (options.inPlace && options.backup)
-				await copy(filePath, filePath + ".bak", { overwrite: true });
+			if (options.inPlace){
+				result.patchedPath = filePath;
+				if (options.backup)
+					await copy(filePath, filePath + ".bak", { overwrite: true });
+			}
 
 			const _tempFile = await Deno.makeTempFile({
 				prefix: "amdfriend-"
@@ -85,9 +86,19 @@ export async function patchFile(filePath: string, options: PatchOptions): Promis
 			if (options.sign)
 				await signFile(_tempFile);
 
-			await move(_tempFile, result.patchedPath, {
-				overwrite: true
-			});
+			try{
+				await Deno.remove(result.patchedPath);
+
+				await move(_tempFile, result.patchedPath, {
+					overwrite: true
+				});
+
+				if(stat.mode)
+					await Deno.chmod(result.patchedPath, stat.mode);
+			}catch(e){
+				console.error(`Error while moving patched file to original path: ${filePath}`);
+				console.error(e);
+			}
 		}
 
 		return result;
